@@ -59,11 +59,11 @@ public class ExcelDriver {
 			readForFinishMethod(workbook);
 			
 			//writting 
-			//writeDesigns(myDB.getConn());
+			writeDesigns(myDB.getConn());
 			writeSpecialFeatures(myDB.getConn());
-			//writeColor(myDB.getConn());
-			//writeTopColor(myDB.getConn());
-			//writeFinishMethods(myDB.getConn());
+			writeColor(myDB.getConn());
+			writeTopColor(myDB.getConn());
+			writeFinishMethods(myDB.getConn());
 			inputStream.close();
 			myDB.closeConnection();
 			return true;
