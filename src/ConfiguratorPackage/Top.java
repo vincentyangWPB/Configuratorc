@@ -215,6 +215,17 @@ public class Top{
 		}
  	}
  	
+ 	public void delete(Connection conn) {
+		String SQL = "DELETE FROM top_colors WHERE ty = " + gettName();
+		
+		try(PreparedStatement pstmt = conn.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS)){
+			pstmt.execute();
+			System.out.println(gettName() +" Top Color deleted");
+		} catch(SQLException ex) {
+			System.out.println(ex.getMessage());
+		}
+ 	}
+ 	
 	@Override
 	public String toString() {
 		return "Top [tname=" + tname + ", descriptionEnglish1=" + descriptionEnglish1 + ", descriptionSpanish1="

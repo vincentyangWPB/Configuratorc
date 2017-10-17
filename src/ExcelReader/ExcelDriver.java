@@ -2,6 +2,8 @@ package ExcelReader;
 import ConfiguratorPackage.*;
 import java.io.*;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.*;
 import DataBaseDrivers.DataBaseConnection;
 
@@ -14,19 +16,33 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class ExcelDriver {
 	private XSSFRow row;
 	private String excelPath;
-	private ArrayList<Design> designList = new ArrayList<>();
-	private ArrayList<SpecialFeature> specialFeatureList = new ArrayList<>();
-	private ArrayList<Color> colorList = new ArrayList<>();
-	private ArrayList<Top> topColorList = new ArrayList<>();
-	private ArrayList<FinishMethod> finishMethodList = new ArrayList<>();
 	
-	public static void main(String[] ags) throws Exception{
-		ExcelDriver myExcel = new ExcelDriver("G:\\Job\\Database\\Updated Catalog Spec REV10.xlsx");
+	//excel arraylist
+	private ArrayList<Design> excelDesignList = new ArrayList<>();
+	private ArrayList<SpecialFeature> excelSpecialFeatureList = new ArrayList<>();
+	private ArrayList<Color> excelColorList = new ArrayList<>();
+	private ArrayList<Top> excelTopColorList = new ArrayList<>();
+	private ArrayList<FinishMethod> excelFinishMethodList = new ArrayList<>();
+	
+	//postgres arraylist
+	private ArrayList<Design> sqlDesignList = new ArrayList<>();
+	private ArrayList<SpecialFeature> sqlSpecialFeatureList = new ArrayList<>();
+	private ArrayList<Color> sqlColorList = new ArrayList<>();
+	private ArrayList<Top> sqlTopColorList = new ArrayList<>();
+	private ArrayList<FinishMethod> sqlFinishMethodList = new ArrayList<>();
+	
+	public static void main(String[] args) {
+		ExcelDriver myNewExcelDriver = new ExcelDriver();
 		try {
-			System.out.println(myExcel.excelToPostgres());
-		} catch(Exception e) {
-			System.err.println(e.getMessage());
+			myNewExcelDriver.readFromPostgres();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+	}
+	
+	public ExcelDriver() {
+		excelPath = "empty";
 	}
 	
 	public ExcelDriver(String excelPath) {
@@ -64,16 +80,52 @@ public class ExcelDriver {
 			writeColor(myDB.getConn());
 			writeTopColor(myDB.getConn());
 			writeFinishMethods(myDB.getConn());
+			
+			//delete
+			deleteColor(myDB.getConn());
 			inputStream.close();
 			myDB.closeConnection();
 			return true;
 		} catch(Exception ex) {
 			System.err.println(ex.getMessage());
 			return false;
-		}
-			
+		}	
 	}
 	
+	public void readFromPostgres() throws Exception{
+		try {
+			DataBaseConnection myDB = new DataBaseConnection();
+			myDB.openConnection();
+			
+			//read from postgress
+			sqlDesignsReader(myDB.getConn());
+			sqlColorReader(myDB.getConn());
+			sqlFinishMethodReader(myDB.getConn());
+			sqlSpecialFeatureReader(myDB.getConn());
+			sqlTopColorReader(myDB.getConn());
+			
+			for(Design d : sqlDesignList) {
+				System.out.println(d.toString());
+			}
+			for(Color c : sqlColorList) {
+				System.out.println(c.toString());
+			}
+			for(FinishMethod fm : sqlFinishMethodList) {
+				System.out.println(fm.toString());
+			}
+			for(SpecialFeature sf : sqlSpecialFeatureList) {
+				System.out.println(sf.toString());
+			}
+			for(Top t : sqlTopColorList) {
+				System.out.println(t.toString());
+			}
+			
+		} catch(Exception ex) {
+			System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+		}
+	}
+	
+	//excel reading methods
 	@SuppressWarnings("deprecation")
 	public void readForDesign(XSSFWorkbook workbook) {
 		XSSFSheet spreadsheet = workbook.getSheetAt(2);
@@ -109,7 +161,7 @@ public class ExcelDriver {
 						Design myDesign = new Design(image1,image2,collection,designNumber,widthEnglish,widthMetric,descriptionEnglish1,descriptionEnglish2,
 								descriptionEnglish3,descriptionSpanish1,descriptionSpanish2,descriptionSpanish3,descriptionFrench1,descriptionFrench2,descriptionFrench3,
 								pg1,pg2,pg3,pg4,pg5,squareFootage);
-						designList.add(myDesign);
+						excelDesignList.add(myDesign);
 						System.out.println(counter);
 						counter++;
 						if(cellIterator.next().getCellType() != 1 || cellIterator.next().getCellType() !=0) {
@@ -148,7 +200,7 @@ public class ExcelDriver {
 						String image1 = cellIterator.next().getStringCellValue();
 						String image2 = cellIterator.next().getStringCellValue();
 						SpecialFeature mySpecialFeature = new SpecialFeature(specialFeatureId, descriptionEnglish, descriptionSpanish, descriptionFrench, pg1, pg2, pg3, pg4, pg5, image1, image2);
-						specialFeatureList.add(mySpecialFeature);
+						excelSpecialFeatureList.add(mySpecialFeature);
 						if(cellIterator.next().getCellType() != 1 || cellIterator.next().getCellType() !=0) {
 							break;
 						}
@@ -191,7 +243,7 @@ public class ExcelDriver {
 							Color newColor = new Color(finishColorSKU, descriptionEnglish, descriptionSpanish, descriptionFrench, compilmentary1, compilmentary2, compilmentary3, pg1, pg2, pg3, pg4, pg5, image125, image145, image300);
 							System.out.println(counter);
 							counter++;
-							colorList.add(newColor);
+							excelColorList.add(newColor);
 							if(cellIterator.next().getCellType() != 1 || cellIterator.next().getCellType() !=0) {
 								break;
 							}
@@ -231,7 +283,7 @@ public class ExcelDriver {
 	//					System.out.println(ty + description_1_english+ description_1_spanish + description_1_french + wpbsf + pricing_group_1 + pricing_group_2 + pricing_group_3 + pricing_group_4 + pricing_group_5 + image_1 + image_2 );
 						
 						Top newTopColor = new Top(ty, description_1_english, description_1_spanish, description_1_french, wpbsf, pricing_group_1, pricing_group_2, pricing_group_3, pricing_group_4, pricing_group_5, image_1, image_2 );
-						topColorList.add(newTopColor);
+						excelTopColorList.add(newTopColor);
 						if(cellIterator.next().getCellType() != 0 || cellIterator.next().getCellType() != 1) {
 							break;
 						}
@@ -270,7 +322,7 @@ public class ExcelDriver {
 						double pg4 = cellIterator.next().getNumericCellValue();
 						double pg5 = cellIterator.next().getNumericCellValue();
 						FinishMethod newFinishMethod = new FinishMethod(image1, image2, finishMethod, descriptionEnglish1, descriptionSpanish1, descriptionFrench1, descriptionEnglish2, descriptionSpanish2, descriptionFrench2, pg1, pg2, pg3, pg4, pg5);
-						finishMethodList.add(newFinishMethod);
+						excelFinishMethodList.add(newFinishMethod);
 						if(cellIterator.next().getCellType() != 0 || cellIterator.next().getCellType() != 1) {
 							break;
 						}
@@ -284,40 +336,230 @@ public class ExcelDriver {
 		System.out.println("Finish Method insert done");
 	}
 	
+	//read from database
+	public void sqlDesignsReader(Connection conn) {
+		Statement stmt = null;
+		try {
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM designs;");
+			while(rs.next()) {
+				String image1 = rs.getString("image_1");
+				String image2 = rs.getString("image_2");
+				String collection =  rs.getString("collection");
+				int designNumber = rs.getInt("design_number");
+				int width = rs.getInt("width_english");
+				double widthMetric = rs.getDouble("width_metric");
+				String de1 = rs.getString("description_1_english");
+				String de2 = rs.getString("description_2_english");
+				String de3 = rs.getString("description_3_english");
+				String ds1 = rs.getString("description_1_spanish");
+				String ds2 = rs.getString("description_2_spanish");
+				String ds3 = rs.getString("description_3_spanish");
+				String df1 = rs.getString("description_1_french");
+				String df2 = rs.getString("description_2_french");
+				String df3 = rs.getString("description_3_french");
+				double pg1 = rs.getBigDecimal("group_price_1").doubleValue();
+				double pg2 = rs.getBigDecimal("group_price_2").doubleValue();
+				double pg3 = rs.getBigDecimal("group_price_3").doubleValue();
+				double pg4 = rs.getBigDecimal("group_price_4").doubleValue();
+				double pg5 = rs.getBigDecimal("group_price_5").doubleValue();
+				double squareFootage = rs.getDouble("sf");
+				
+				Design newDesign = new Design(image1, image2, collection, designNumber, width, widthMetric, de1, de2, de3, ds1, ds2, ds3, df1, df2, df3, pg1, pg2, pg3, pg4, pg5, squareFootage);
+				sqlDesignList.add(newDesign);
+			}
+		} catch(Exception ex) {
+			System.err.println(ex.getClass().getName()+": " + ex.getMessage());
+			ex.getStackTrace();
+		}
+		System.out.println("designs read SQL done successfully");
+	}
+	
+	public void sqlSpecialFeatureReader(Connection conn) {
+		Statement stmt = null;
+		try {
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("Select * FROM special_features");
+			while(rs.next()) {
+				String specialFeatureId = rs.getString("special_feature_id");
+				String de1 = rs.getString("description_1_english");
+				String ds1 = rs.getString("description_1_spanish");
+				String df1 = rs.getString("description_1_french");
+				double pg1 = rs.getBigDecimal("price_group_1").doubleValue();
+				double pg2 = rs.getBigDecimal("price_group_2").doubleValue();
+				double pg3 = rs.getBigDecimal("prcie_group_3").doubleValue();
+				double pg4 = rs.getBigDecimal("price_group_4").doubleValue();
+				double pg5 = rs.getBigDecimal("price_group_5").doubleValue();
+				String image1 = rs.getString("image_1");
+				String image2 = rs.getString("image_2");
+				SpecialFeature newSpecialFeature = new SpecialFeature(specialFeatureId, de1, ds1, df1, pg1, pg2, pg3, pg4, pg5, image1, image2);
+				
+				sqlSpecialFeatureList.add(newSpecialFeature);
+			}
+		} catch(Exception ex) {
+			System.err.print(ex.getClass().getName()+": " + ex.getMessage());
+		}
+		System.out.println("special feature SQL read done successfully");
+	}
+	
+	public void sqlColorReader(Connection conn) {
+		Statement stmt = null;
+		try {
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM finish_colors;");
+			while(rs.next()) {
+				int finishColorSku = rs.getInt("finish_color_sku");
+				String descriptionEnglish1 = rs.getString("description_1_english");
+				String descriptionSpanish1 = rs.getString("description_1_spanish");
+				String descriptionFrench1 = rs.getString("description_1_french");
+				String complimentary1 = rs.getString("complimentary_1");
+				String complimentary2 = rs.getString("complimentary_2");
+				String complimentary3 = rs.getString("complimentary_3");
+				double pg1 = rs.getBigDecimal("price_group_1").doubleValue();
+				double pg2 = rs.getBigDecimal("price_group_2").doubleValue();
+				double pg3 = rs.getBigDecimal("price_group_3").doubleValue();
+				double pg4 = rs.getBigDecimal("price_group_4").doubleValue();
+				double pg5 = rs.getBigDecimal("price_group_5").doubleValue();
+				String image1 = rs.getString("image_1");
+				String image2 = rs.getString("image_2");
+				String image3 = "EMPTY";
+				Color newColor = new Color(finishColorSku, descriptionEnglish1, descriptionSpanish1, descriptionFrench1, complimentary1, complimentary2, complimentary3, pg1, pg2, pg3, pg4, pg5, image1, image2, image3);
+				sqlColorList.add(newColor);
+			}
+		} catch(Exception ex) {
+			System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+		}
+		
+		System.out.println("finish color SQL read done successfully");
+	}
+	
+	public void sqlFinishMethodReader(Connection conn) {
+		Statement stmt = null;
+		try {
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM finish_methods");
+			while(rs.next()) {
+				String image1 = rs.getString("finish_image_1");
+				String image2 = rs.getString("finish_image_2");
+				String finishMethod = rs.getString("finish_method");
+				String descriptionEnglish1 = rs.getString("description_1_english");
+				String descriptionSpanish1 = rs.getString("description_1_spanish");
+				String descriptionFrench1 = rs.getString("description_1_french");
+				String descriptionEnglish2 = rs.getString("description_2_english");
+				String descriptionSpanish2 = rs.getString("description_2_spanish");
+				String descriptionFrench2 = rs.getString("description_2_french");
+				double pg1 = rs.getBigDecimal("pricing_group_1").doubleValue();
+				double pg2 = rs.getBigDecimal("pricing_group_2").doubleValue();
+				double pg3 = rs.getBigDecimal("pricing_group_3").doubleValue();
+				double pg4 = rs.getBigDecimal("pricing_group_4").doubleValue();
+				double pg5 = rs.getBigDecimal("pricing_group_5").doubleValue();
+				FinishMethod newFinishMethod = new FinishMethod(image1, image2, finishMethod, descriptionEnglish1, descriptionSpanish1, descriptionFrench1, descriptionEnglish2, descriptionSpanish2, descriptionFrench2, pg1, pg2, pg3, pg4, pg5);
+				sqlFinishMethodList.add(newFinishMethod);
+			}
+		} catch(Exception ex) {
+			System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+		}
+		System.out.println("finish method SQL read done successfully");
+	}
+	
+	public void sqlTopColorReader(Connection conn) {
+		Statement stmt = null;
+		try {
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT * FROM top_colors");
+			while(rs.next()) {
+				String topColor = rs.getString("ty");
+				String descriptionEnglish1 = rs.getString("description_1_english");
+				String descriptionSpanish1 = rs.getString("description_1_Spanish");
+				String descriptionFrench1 = rs.getString("description_1_french");
+				int wpbsf = rs.getInt("wpbsf");
+				double pg1 = rs.getBigDecimal("pricing_group_1").doubleValue();
+				double pg2 = rs.getBigDecimal("pricing_group_2").doubleValue();
+				double pg3 = rs.getBigDecimal("pricing_group_3").doubleValue();
+				double pg4 = rs.getBigDecimal("pricing_group_4").doubleValue();
+				double pg5 = rs.getBigDecimal("pricing_group_5").doubleValue();
+				String image1 = rs.getString("image_1");
+				String image2 = rs.getString("image_2");
+				Top newTop = new Top(topColor, descriptionEnglish1, descriptionSpanish1, descriptionFrench1, wpbsf, pg1, pg2, pg3, pg4, pg5, image1, image2);
+				sqlTopColorList.add(newTop);
+			}
+		} catch(Exception ex) {
+			System.err.println(ex.getClass().getName() + ": " + ex.getMessage());
+		}
+		System.out.println("top color SQL read done successfully");
+	}
+	
 	//writting methods
 	public void writeDesigns(Connection conn) {
-		for(Design design : designList) {
+		for(Design design : excelDesignList) {
 			design.write(conn);
 		}
 		System.out.println("Designs done writting");
 	}
 	
 	public void writeSpecialFeatures(Connection conn) {
-		for(SpecialFeature specialFeature : specialFeatureList) {
+		for(SpecialFeature specialFeature : excelSpecialFeatureList) {
 			specialFeature.write(conn);
 		}
 		System.out.println("Speical Features done writting");
 	}
 	
 	public void writeColor(Connection conn) {
-		for(Color color : colorList) {
+		for(Color color : excelColorList) {
 			color.write(conn);
 		}
 		System.out.println("Color done writting");
 	}
 	
 	public void writeTopColor(Connection conn) {
-		for(Top topColor : topColorList) {
+		for(Top topColor : excelTopColorList) {
 			topColor.write(conn);
 		}
 		System.out.println("Top Color done writting");
 	}
 	
 	public void writeFinishMethods(Connection conn) {
-		for(FinishMethod finishMethod :  finishMethodList) {
+		for(FinishMethod finishMethod :  excelFinishMethodList) {
 			finishMethod.write(conn);
 		}
 		System.out.println("Finish Method done writting");
 	}
+	
+	//deleting methods
+	public void deleteColor(Connection conn) {
+		for(Color deleteColor : sqlColorList) {
+			deleteColor.delete(conn);
+		}
+		System.out.println("Color content deleted");
+	}
+	
+	public void deleteDesign(Connection conn) {
+		for(Design deleteDesign : sqlDesignList) {
+			deleteDesign.delete(conn);
+		}
+		System.out.println("Design content deleted");
+	}
+	
+	public void deleteSpecialFeature(Connection conn) {
+		for(SpecialFeature deleteSpecialFeature : sqlSpecialFeatureList) {
+			deleteSpecialFeature.delete(conn);
+		}
+		System.out.println("Special Featuer content deleted");
+	}
+	
+	public void deleteFinishMethod(Connection conn) {
+		for(FinishMethod deleteFinishMethod : sqlFinishMethodList) {
+			deleteFinishMethod.delete(conn);
+		}
+		System.out.println("Finish Method content deleted");
+	}
+	
+	public void deleteTopColor(Connection conn) {
+		for(Top deleteTopColor :  sqlTopColorList) {
+			deleteTopColor.delete(conn);
+		}
+		System.out.println("Top Color content deleted");
+	}
+	
 }
 

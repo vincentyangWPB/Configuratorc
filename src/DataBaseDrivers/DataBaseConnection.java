@@ -61,7 +61,8 @@ public class DataBaseConnection {
 	 * @return
 	 */
 	public Connection getConn() {
-		return this.conn;
+		Connection newConn = conn;
+		return newConn;
 	}
 	
 	/**
