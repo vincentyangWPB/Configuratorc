@@ -49,9 +49,9 @@ public class UserAndAdmin {
 		return "{Name: " + name + "\nUser Type: " + userType + "\nHashed Password: " + hashedPassword + "}";
 	}
 	
-//	public static void main(String[] args) {
-//		UserAndAdmin user = new UserAndAdmin("k_yang6", "Vincent100m!", "admin");
-//		System.out.println(user.getHashedPassowrd());
-//		System.out.println(user.toString());
-//	}
+	public static void main(String[] args) {
+		UserAndAdmin user = new UserAndAdmin("k_yang6", "Vincent100m!", "admin");
+		System.out.println(user.getHashedPassowrd());
+		System.out.println(user.toString());
+	}
 }

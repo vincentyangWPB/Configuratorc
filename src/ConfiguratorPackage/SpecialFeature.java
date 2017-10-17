@@ -190,6 +190,17 @@ public class SpecialFeature{
 		
 	}
 
+	public void delete(Connection conn) {
+		String SQL = "DELETE FROM special_features WHERE special_feature_id = " + getsfName();
+		
+		try(PreparedStatement pstmt = conn.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS)){
+			pstmt.execute();
+			System.out.println(getsfName() + " Special feature deleted");
+		} catch(SQLException ex) {
+			System.out.println(ex.getMessage());
+		}
+	}
+	
 	@Override
 	public String toString() {
 		return "SpecialFeature [image1=" + image1 + ", image2=" + image2 + ", descriptionEnglish1="

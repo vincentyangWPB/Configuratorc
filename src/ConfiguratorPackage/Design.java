@@ -516,8 +516,15 @@ public class Design{
 		}
 	}
 	
-	public void delete() {
+	public void delete(Connection conn) {
+		String SQL = "DELETE FROM designs WHERE design_number = " + getDesignNumber();
 		
+		try(PreparedStatement pstmt = conn.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS)){
+			pstmt.execute();
+			System.out.println(getDesignNumber()+ " Designs deleted");
+		} catch(SQLException ex) {
+			System.out.println(ex.getMessage());
+		}
 	}
 	
 	@Override

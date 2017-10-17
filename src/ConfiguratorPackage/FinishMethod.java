@@ -215,7 +215,14 @@ public class FinishMethod{
 	}
 	
 	public void delete(Connection conn) {
+		String SQL = "DELETE FROM finish_methods WHERE finish_method = " + getfName();
 		
+		try(PreparedStatement pstmt = conn.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS)){
+			pstmt.execute();
+			System.out.println(getfName() + " Finish Method deleted");
+		} catch(SQLException ex) {
+			System.out.println(ex.getMessage());
+		}
 	}
 
 	@Override

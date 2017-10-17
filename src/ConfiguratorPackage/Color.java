@@ -224,7 +224,17 @@ public class Color{
 		}
 	}
 	
-
+	public void delete(Connection conn) {
+		String SQL = "DELETE FROM finish_colors WHERE finish_color_sku = " + getcNumber();
+		
+		try(PreparedStatement pstmt = conn.prepareStatement(SQL, Statement.RETURN_GENERATED_KEYS)){
+			pstmt.execute();
+			System.out.println(getcNumber() + " Colors deleted");
+		} catch(SQLException ex) {
+			System.out.println(ex.getMessage());
+		}
+	}
+	
 	@Override
 	public String toString() {
 		return "Color [descriptionEnglish=" + descriptionEnglish + ", descriptionSpanish=" + descriptionSpanish
